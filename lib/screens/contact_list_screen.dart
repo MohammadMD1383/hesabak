@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../models/app_preferences.dart';
 import '../models/contact.dart';
 import '../models/transaction.dart';
+import '../utils/app_text.dart';
 import '../utils/persian_utils.dart';
 import '../services/database_helper.dart';
 import 'settings_screen.dart';
@@ -8,8 +10,13 @@ import 'transaction_chat_screen.dart';
 
 class ContactListScreen extends StatefulWidget {
   final Future<void> Function(ThemeMode mode)? onThemeModeChanged;
+  final Future<void> Function(AppLanguageMode mode)? onLanguageModeChanged;
 
-  const ContactListScreen({super.key, this.onThemeModeChanged});
+  const ContactListScreen({
+    super.key,
+    this.onThemeModeChanged,
+    this.onLanguageModeChanged,
+  });
 
   @override
   State<ContactListScreen> createState() => _ContactListScreenState();
@@ -37,7 +44,9 @@ class _ContactListScreenState extends State<ContactListScreen> {
   }
 
   String _currencyLabel() {
-    return _defaultCurrency == Currency.toman ? 'تومان' : 'ریال';
+    return _defaultCurrency == Currency.toman
+        ? AppText.t(context, 'تومان', 'Toman')
+        : AppText.t(context, 'ریال', 'Rial');
   }
 
   String _formatAmount(double amount) {
@@ -53,18 +62,20 @@ class _ContactListScreenState extends State<ContactListScreen> {
       builder: (context) {
         String name = '';
         return Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: AppText.direction(context),
           child: AlertDialog(
-            title: const Text('افزودن مخاطب جدید'),
+            title: Text(AppText.t(context, 'افزودن مخاطب جدید', 'Add New Contact')),
             content: TextField(
               onChanged: (value) => name = value,
               autofocus: true,
-              decoration: const InputDecoration(hintText: 'نام مخاطب'),
+              decoration: InputDecoration(
+                hintText: AppText.t(context, 'نام مخاطب', 'Contact name'),
+              ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('انصراف'),
+                child: Text(AppText.t(context, 'انصراف', 'Cancel')),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -79,7 +90,7 @@ class _ContactListScreenState extends State<ContactListScreen> {
                     _refreshContacts();
                   }
                 },
-                child: const Text('تایید'),
+                child: Text(AppText.t(context, 'تایید', 'Confirm')),
               ),
             ],
           ),
@@ -92,14 +103,20 @@ class _ContactListScreenState extends State<ContactListScreen> {
     showDialog(
       context: context,
       builder: (context) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: AppText.direction(context),
         child: AlertDialog(
-          title: const Text('حذف مخاطب'),
-          content: Text('آیا از حذف "${contact.name}" و تمامی تراکنش‌های آن مطمئن هستید؟'),
+          title: Text(AppText.t(context, 'حذف مخاطب', 'Delete Contact')),
+          content: Text(
+            AppText.t(
+              context,
+              'آیا از حذف "${contact.name}" و تمامی تراکنش‌های آن مطمئن هستید؟',
+              'Are you sure you want to delete "${contact.name}" and all its transactions?',
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('انصراف'),
+              child: Text(AppText.t(context, 'انصراف', 'Cancel')),
             ),
             TextButton(
               onPressed: () async {
@@ -107,7 +124,10 @@ class _ContactListScreenState extends State<ContactListScreen> {
                 if (mounted) Navigator.pop(context);
                 _refreshContacts();
               },
-              child: const Text('حذف', style: TextStyle(color: Colors.red)),
+              child: Text(
+                AppText.t(context, 'حذف', 'Delete'),
+                style: const TextStyle(color: Colors.red),
+              ),
             ),
           ],
         ),
@@ -118,10 +138,10 @@ class _ContactListScreenState extends State<ContactListScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: AppText.direction(context),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('حسابک'),
+          title: Text(AppText.t(context, 'حسابک', 'Hesabak')),
           centerTitle: true,
           actions: [
             IconButton(
@@ -131,19 +151,20 @@ class _ContactListScreenState extends State<ContactListScreen> {
                   MaterialPageRoute(
                     builder: (context) => SettingsScreen(
                       onThemeModeChanged: widget.onThemeModeChanged,
+                      onLanguageModeChanged: widget.onLanguageModeChanged,
                     ),
                   ),
                 ).then((_) => _refreshContacts());
               },
               icon: const Icon(Icons.settings),
-              tooltip: 'تنظیمات',
+              tooltip: AppText.t(context, 'تنظیمات', 'Settings'),
             ),
           ],
         ),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _contacts.isEmpty
-                ? const Center(child: Text('هنوز مخاطبی اضافه نشده است'))
+                ? Center(child: Text(AppText.t(context, 'هنوز مخاطبی اضافه نشده است', 'No contacts yet')))
                 : ListView.separated(
                     itemCount: _contacts.length,
                     separatorBuilder: (context, index) => const Divider(height: 1),
@@ -158,10 +179,10 @@ class _ContactListScreenState extends State<ContactListScreen> {
                         title: Text(contact.name),
                         subtitle: Text(
                           balance == 0
-                              ? 'تسویه'
+                              ? AppText.t(context, 'تسویه', 'Settled')
                               : (balance > 0
-                                  ? 'طلب شما: ${_formatAmount(balance.abs())} ${_currencyLabel()}'
-                                  : 'بدهی شما: ${_formatAmount(balance.abs())} ${_currencyLabel()}'),
+                                  ? '${AppText.t(context, 'طلب شما', 'You are owed')}: ${_formatAmount(balance.abs())} ${_currencyLabel()}'
+                                  : '${AppText.t(context, 'بدهی شما', 'You owe')}: ${_formatAmount(balance.abs())} ${_currencyLabel()}'),
                           style: TextStyle(
                             color: balance == 0
                                 ? Colors.grey
@@ -190,7 +211,7 @@ class _ContactListScreenState extends State<ContactListScreen> {
                   ),
         floatingActionButton: FloatingActionButton(
           onPressed: _addNewContact,
-          tooltip: 'افزودن مخاطب',
+          tooltip: AppText.t(context, 'افزودن مخاطب', 'Add contact'),
           child: const Icon(Icons.person_add),
         ),
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/contact.dart';
 import '../models/transaction.dart';
+import '../utils/app_text.dart';
 import '../utils/persian_utils.dart';
 import '../utils/currency_formatter.dart';
 import '../services/database_helper.dart';
@@ -81,7 +82,9 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
   }
 
   String _currencyLabel() {
-    return _defaultCurrency == Currency.toman ? 'تومان' : 'ریال';
+    return _defaultCurrency == Currency.toman
+        ? AppText.t(context, 'تومان', 'Toman')
+        : AppText.t(context, 'ریال', 'Rial');
   }
 
   String _currencyLabelWithSpace() {
@@ -89,7 +92,9 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
   }
 
   String _selectedCurrencyLabelWithSpace() {
-    return _selectedCurrency == Currency.toman ? ' تومان' : ' ریال';
+    return _selectedCurrency == Currency.toman
+        ? ' ${AppText.t(context, 'تومان', 'Toman')}'
+        : ' ${AppText.t(context, 'ریال', 'Rial')}';
   }
 
   String _formatAmount(double amount) {
@@ -115,7 +120,7 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
     if (_selectedType == TransactionType.event) {
       if (_descriptionController.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('لطفاً متن رویداد را وارد کنید')),
+          SnackBar(content: Text(AppText.t(context, 'لطفاً متن رویداد را وارد کنید', 'Please enter event text'))),
         );
         return;
       }
@@ -131,7 +136,7 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
       final double? enteredAmount = double.tryParse(text);
       if (enteredAmount == null || enteredAmount <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('لطفاً مبلغ معتبری وارد کنید')),
+          SnackBar(content: Text(AppText.t(context, 'لطفاً مبلغ معتبری وارد کنید', 'Please enter a valid amount'))),
         );
         return;
       }
@@ -169,14 +174,14 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
     showDialog(
       context: context,
       builder: (context) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: AppText.direction(context),
         child: AlertDialog(
-          title: const Text('حذف تراکنش'),
-          content: const Text('آیا از حذف این تراکنش مطمئن هستید؟'),
+          title: Text(AppText.t(context, 'حذف تراکنش', 'Delete Transaction')),
+          content: Text(AppText.t(context, 'آیا از حذف این تراکنش مطمئن هستید؟', 'Are you sure you want to delete this transaction?')),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('انصراف'),
+              child: Text(AppText.t(context, 'انصراف', 'Cancel')),
             ),
             TextButton(
               onPressed: () async {
@@ -186,7 +191,10 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
                 });
                 if (mounted) Navigator.pop(context);
               },
-              child: const Text('حذف', style: TextStyle(color: Colors.red)),
+              child: Text(
+                AppText.t(context, 'حذف', 'Delete'),
+                style: const TextStyle(color: Colors.red),
+              ),
             ),
           ],
         ),
@@ -198,14 +206,14 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
     showModalBottomSheet(
       context: context,
       builder: (context) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: AppText.direction(context),
         child: SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('حذف'),
+                title: Text(AppText.t(context, 'حذف', 'Delete')),
                 onTap: () {
                   Navigator.pop(context);
                   _deleteTransaction(transaction);
@@ -213,7 +221,7 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.edit),
-                title: const Text('ویرایش'),
+                title: Text(AppText.t(context, 'ویرایش', 'Edit')),
                 onTap: () {
                   Navigator.pop(context);
                   _editTransaction(transaction);
@@ -221,7 +229,7 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.bar_chart),
-                title: const Text('نمایش وضعیت تا اینجا'),
+                title: Text(AppText.t(context, 'نمایش وضعیت تا اینجا', 'View State Up To Here')),
                 onTap: () {
                   Navigator.pop(context);
                   _showStateUpTo(transaction);
@@ -264,7 +272,9 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
       }
 
       amountInWords = PersianUtils.numberToWords(value) +
-          (editCurrency == Currency.toman ? ' تومان' : ' ریال');
+          (editCurrency == Currency.toman
+              ? ' ${AppText.t(context, 'تومان', 'Toman')}'
+              : ' ${AppText.t(context, 'ریال', 'Rial')}');
     }
 
     updateAmountInWords();
@@ -272,9 +282,9 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: AppText.direction(context),
         child: AlertDialog(
-          title: const Text('ویرایش تراکنش'),
+          title: Text(AppText.t(context, 'ویرایش تراکنش', 'Edit Transaction')),
           content: StatefulBuilder(
             builder: (context, setDialogState) => Column(
               mainAxisSize: MainAxisSize.min,
@@ -305,8 +315,8 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
                       updateAmountInWords();
                     });
                   },
-                  decoration: const InputDecoration(
-                    hintText: 'مبلغ',
+                  decoration: InputDecoration(
+                    hintText: AppText.t(context, 'مبلغ', 'Amount'),
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -322,16 +332,22 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
                       });
                     }
                   },
-                  items: const [
-                    DropdownMenuItem(value: Currency.toman, child: Text('تومان')),
-                    DropdownMenuItem(value: Currency.rial, child: Text('ریال')),
+                  items: [
+                    DropdownMenuItem(
+                      value: Currency.toman,
+                      child: Text(AppText.t(context, 'تومان', 'Toman')),
+                    ),
+                    DropdownMenuItem(
+                      value: Currency.rial,
+                      child: Text(AppText.t(context, 'ریال', 'Rial')),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: descriptionController,
-                  decoration: const InputDecoration(
-                    hintText: 'توضیحات اختیاری...',
+                  decoration: InputDecoration(
+                    hintText: AppText.t(context, 'توضیحات اختیاری...', 'Optional description...'),
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -341,11 +357,11 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('انصراف'),
+              child: Text(AppText.t(context, 'انصراف', 'Cancel')),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('ذخیره'),
+              child: Text(AppText.t(context, 'ذخیره', 'Save')),
             ),
           ],
         ),
@@ -359,7 +375,7 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
     if (enteredAmount == null || enteredAmount <= 0) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لطفاً مبلغ معتبری وارد کنید')),
+        SnackBar(content: Text(AppText.t(context, 'لطفاً مبلغ معتبری وارد کنید', 'Please enter a valid amount'))),
       );
       return;
     }
@@ -393,24 +409,24 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: AppText.direction(context),
         child: AlertDialog(
-          title: const Text('ویرایش رویداد'),
+          title: Text(AppText.t(context, 'ویرایش رویداد', 'Edit Event')),
           content: TextField(
             controller: descriptionController,
-            decoration: const InputDecoration(
-              hintText: 'متن رویداد...',
+            decoration: InputDecoration(
+              hintText: AppText.t(context, 'متن رویداد...', 'Event text...'),
               border: OutlineInputBorder(),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('انصراف'),
+              child: Text(AppText.t(context, 'انصراف', 'Cancel')),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('ذخیره'),
+              child: Text(AppText.t(context, 'ذخیره', 'Save')),
             ),
           ],
         ),
@@ -422,7 +438,7 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
     if (text.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لطفاً متن رویداد را وارد کنید')),
+        SnackBar(content: Text(AppText.t(context, 'لطفاً متن رویداد را وارد کنید', 'Please enter event text'))),
       );
       return;
     }
@@ -465,22 +481,22 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
 
     final net = totalCredit - totalDebt;
     final netLabel = net == 0
-        ? 'تسویه'
-        : (net > 0 ? 'طلب شما' : 'بدهی شما');
+        ? AppText.t(context, 'تسویه', 'Settled')
+        : (net > 0 ? AppText.t(context, 'طلب شما', 'You are owed') : AppText.t(context, 'بدهی شما', 'You owe'));
     final netValue = net == 0 ? '' : '${_formatAmount(net.abs())} ${_currencyLabel()}';
 
     showDialog(
       context: context,
       builder: (context) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: AppText.direction(context),
         child: AlertDialog(
-          title: const Text('وضعیت تا اینجا'),
+          title: Text(AppText.t(context, 'وضعیت تا اینجا', 'State Up To Here')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('جمع بستانکاری: ${_formatAmount(totalCredit)} ${_currencyLabel()}'),
+              Text('${AppText.t(context, 'جمع بستانکاری', 'Total credit')}: ${_formatAmount(totalCredit)} ${_currencyLabel()}'),
               const SizedBox(height: 6),
-              Text('جمع بدهکاری: ${_formatAmount(totalDebt)} ${_currencyLabel()}'),
+              Text('${AppText.t(context, 'جمع بدهکاری', 'Total debt')}: ${_formatAmount(totalDebt)} ${_currencyLabel()}'),
               const Divider(height: 16),
               Text(
                 net == 0 ? netLabel : '$netLabel: $netValue',
@@ -491,7 +507,7 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('بستن'),
+              child: Text(AppText.t(context, 'بستن', 'Close')),
             ),
           ],
         ),
@@ -537,16 +553,16 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
     final yesterday = today.subtract(const Duration(days: 1));
     final d = DateTime(date.year, date.month, date.day);
 
-    if (d == today) return 'امروز';
-    if (d == yesterday) return 'دیروز';
+    if (d == today) return AppText.t(context, 'امروز', 'Today');
+    if (d == yesterday) return AppText.t(context, 'دیروز', 'Yesterday');
     return '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isSettingsLoading) {
-      return const Directionality(
-        textDirection: TextDirection.rtl,
+      return Directionality(
+        textDirection: AppText.direction(context),
         child: Scaffold(
           body: Center(child: CircularProgressIndicator()),
         ),
@@ -558,7 +574,7 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
     final balance = widget.contact.totalBalanceIn(_defaultCurrency);
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: AppText.direction(context),
       child: Scaffold(
         appBar: AppBar(
           title: Column(
@@ -567,10 +583,10 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
               Text(widget.contact.name),
               Text(
                 balance == 0
-                    ? 'تسویه'
+                    ? AppText.t(context, 'تسویه', 'Settled')
                     : (balance > 0
-                        ? 'طلب شما: ${_formatAmount(balance.abs())} ${_currencyLabel()}'
-                        : 'بدهی شما: ${_formatAmount(balance.abs())} ${_currencyLabel()}'),
+                        ? '${AppText.t(context, 'طلب شما', 'You are owed')}: ${_formatAmount(balance.abs())} ${_currencyLabel()}'
+                        : '${AppText.t(context, 'بدهی شما', 'You owe')}: ${_formatAmount(balance.abs())} ${_currencyLabel()}'),
                 style: TextStyle(
                   fontSize: 11,
                   color: balance == 0
@@ -591,7 +607,7 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
               child: widget.contact.transactions.isEmpty
                   ? Center(
                       child: Text(
-                        'هنوز تراکنشی ثبت نشده است',
+                        AppText.t(context, 'هنوز تراکنشی ثبت نشده است', 'No transactions yet'),
                         style: TextStyle(
                             color: isDark ? Colors.grey.shade400 : Colors.grey.shade500),
                       ),
@@ -794,10 +810,10 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
                       FilteringTextInputFormatter.digitsOnly,
                       CurrencyTextInputFormatter(),
                     ],
-                    decoration: const InputDecoration(
-                      hintText: 'مبلغ',
+                    decoration: InputDecoration(
+                      hintText: AppText.t(context, 'مبلغ', 'Amount'),
                       border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
                   ),
                 ),
@@ -811,9 +827,15 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
                       _updateAmountInWords();
                     }
                   },
-                  items: const [
-                    DropdownMenuItem(value: Currency.toman, child: Text('تومان')),
-                    DropdownMenuItem(value: Currency.rial, child: Text('ریال')),
+                  items: [
+                    DropdownMenuItem(
+                      value: Currency.toman,
+                      child: Text(AppText.t(context, 'تومان', 'Toman')),
+                    ),
+                    DropdownMenuItem(
+                      value: Currency.rial,
+                      child: Text(AppText.t(context, 'ریال', 'Rial')),
+                    ),
                   ],
                 ),
                 const SizedBox(width: 8),
@@ -827,19 +849,19 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
                 items: [
                   DropdownMenuItem(
                     value: TransactionType.debt,
-                    child: Text('بدهکار',
+                    child: Text(AppText.t(context, 'بدهکار', 'Debt'),
                         style: TextStyle(
                             color: isDark ? Colors.red.shade300 : Colors.red)),
                   ),
                   DropdownMenuItem(
                     value: TransactionType.credit,
-                    child: Text('بستانکار',
+                    child: Text(AppText.t(context, 'بستانکار', 'Credit'),
                         style: TextStyle(
                             color: isDark ? Colors.green.shade300 : Colors.green)),
                   ),
                   DropdownMenuItem(
                     value: TransactionType.event,
-                    child: Text('رویداد',
+                    child: Text(AppText.t(context, 'رویداد', 'Event'),
                         style: TextStyle(
                             color: isDark ? Colors.grey.shade400 : Colors.grey)),
                   ),
@@ -855,8 +877,8 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
                   controller: _descriptionController,
                   decoration: InputDecoration(
                     hintText: _selectedType == TransactionType.event
-                        ? 'متن رویداد...'
-                        : 'توضیحات اختیاری...',
+                        ? AppText.t(context, 'متن رویداد...', 'Event text...')
+                        : AppText.t(context, 'توضیحات اختیاری...', 'Optional description...'),
                     border: const OutlineInputBorder(),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),

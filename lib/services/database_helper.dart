@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/contact.dart';
+import '../models/app_preferences.dart';
 import '../models/transaction.dart';
 
 class DatabaseHelper {
@@ -254,6 +255,46 @@ class DatabaseHelper {
     await db.insert(
       'settings',
       {'key': 'theme_mode', 'value': value},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<AppLanguageMode> getLanguageMode() async {
+    final db = await instance.database;
+    final rows = await db.query(
+      'settings',
+      where: 'key = ?',
+      whereArgs: ['language_mode'],
+      limit: 1,
+    );
+
+    if (rows.isEmpty) {
+      await setLanguageMode(AppLanguageMode.system);
+      return AppLanguageMode.system;
+    }
+
+    final value = rows.first['value'] as String?;
+    switch (value) {
+      case 'en':
+        return AppLanguageMode.en;
+      case 'fa':
+        return AppLanguageMode.fa;
+      default:
+        return AppLanguageMode.system;
+    }
+  }
+
+  Future<void> setLanguageMode(AppLanguageMode mode) async {
+    final db = await instance.database;
+    final value = switch (mode) {
+      AppLanguageMode.system => 'system',
+      AppLanguageMode.en => 'en',
+      AppLanguageMode.fa => 'fa',
+    };
+
+    await db.insert(
+      'settings',
+      {'key': 'language_mode', 'value': value},
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
