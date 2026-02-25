@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as p;
 import '../models/app_preferences.dart';
 import '../models/transaction.dart';
 import '../services/database_helper.dart';
@@ -75,53 +77,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  Future<String?> _promptForPath({
-    required String title,
-    required String actionLabel,
-    String? initialValue,
-    String? helperText,
-  }) async {
-    final controller = TextEditingController(text: initialValue ?? '');
-    return showDialog<String>(
-      context: context,
-      builder: (context) => Directionality(
-        textDirection: AppText.direction(context),
-        child: AlertDialog(
-          title: Text(title),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: controller,
-                decoration: InputDecoration(
-                  hintText: AppText.t(context, 'مسیر فایل', 'File path'),
-                  helperText: helperText,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(AppText.t(context, 'انصراف', 'Cancel')),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, controller.text.trim()),
-              child: Text(actionLabel),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _exportData() async {
-    final defaultPath = await DatabaseHelper.instance.getSuggestedBackupPath();
-    final path = await _promptForPath(
-      title: AppText.t(context, 'خروجی گرفتن', 'Export'),
-      actionLabel: AppText.t(context, 'ذخیره', 'Save'),
-      initialValue: defaultPath,
-      helperText: '${AppText.t(context, 'مثال', 'Example')}: $defaultPath',
+    final suggestedPath = await DatabaseHelper.instance.getSuggestedBackupPath();
+    final path = await FilePicker.platform.saveFile(
+      dialogTitle: AppText.t(context, 'خروجی گرفتن', 'Export'),
+      fileName: p.basename(suggestedPath),
+      initialDirectory: p.dirname(suggestedPath),
     );
 
     if (path == null || path.isEmpty) return;
@@ -145,12 +106,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _importData() async {
-    final path = await _promptForPath(
-      title: AppText.t(context, 'بازیابی', 'Restore'),
-      actionLabel: AppText.t(context, 'بازیابی', 'Restore'),
-      helperText: AppText.t(context, 'مسیر فایل پشتیبان را وارد کنید', 'Enter backup file path'),
+    final result = await FilePicker.platform.pickFiles(
+      dialogTitle: AppText.t(context, 'انتخاب فایل پشتیبان', 'Choose backup file'),
+      allowMultiple: false,
+      type: FileType.custom,
+      allowedExtensions: const ['db'],
+      withData: false,
     );
-
+    final path = result?.files.single.path;
     if (path == null || path.isEmpty) return;
     if (!mounted) return;
 
