@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
+import 'dart:io' show Platform;
 import '../models/app_preferences.dart';
 import '../models/transaction.dart';
 import '../services/database_helper.dart';
@@ -79,11 +80,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _exportData() async {
     final suggestedPath = await DatabaseHelper.instance.getSuggestedBackupPath();
-    final path = await FilePicker.platform.saveFile(
-      dialogTitle: AppText.t(context, 'خروجی گرفتن', 'Export'),
-      fileName: p.basename(suggestedPath),
-      initialDirectory: p.dirname(suggestedPath),
-    );
+    String? path;
+    if (Platform.isAndroid) {
+      final dirPath = await FilePicker.platform.getDirectoryPath(
+        dialogTitle: AppText.t(context, 'انتخاب پوشه برای خروجی', 'Choose export folder'),
+      );
+      if (dirPath != null && dirPath.isNotEmpty) {
+        path = p.join(dirPath, p.basename(suggestedPath));
+      }
+    } else {
+      path = await FilePicker.platform.saveFile(
+        dialogTitle: AppText.t(context, 'خروجی گرفتن', 'Export'),
+        fileName: p.basename(suggestedPath),
+        initialDirectory: p.dirname(suggestedPath),
+      );
+    }
 
     if (path == null || path.isEmpty) return;
     if (!mounted) return;
