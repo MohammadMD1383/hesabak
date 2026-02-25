@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/contact.dart';
@@ -214,6 +215,45 @@ class DatabaseHelper {
     await db.insert(
       'settings',
       {'key': 'default_currency', 'value': currency.name},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<ThemeMode> getThemeMode() async {
+    final db = await instance.database;
+    final rows = await db.query(
+      'settings',
+      where: 'key = ?',
+      whereArgs: ['theme_mode'],
+      limit: 1,
+    );
+
+    if (rows.isEmpty) {
+      await setThemeMode(ThemeMode.system);
+      return ThemeMode.system;
+    }
+
+    final value = rows.first['value'] as String?;
+    switch (value) {
+      case 'light':
+        return ThemeMode.light;
+      case 'dark':
+        return ThemeMode.dark;
+      default:
+        return ThemeMode.system;
+    }
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    final db = await instance.database;
+    final value = switch (mode) {
+      ThemeMode.light => 'light',
+      ThemeMode.dark => 'dark',
+      ThemeMode.system => 'system',
+    };
+    await db.insert(
+      'settings',
+      {'key': 'theme_mode', 'value': value},
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }

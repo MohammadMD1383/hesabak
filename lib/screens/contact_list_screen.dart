@@ -7,7 +7,9 @@ import 'settings_screen.dart';
 import 'transaction_chat_screen.dart';
 
 class ContactListScreen extends StatefulWidget {
-  const ContactListScreen({super.key});
+  final Future<void> Function(ThemeMode mode)? onThemeModeChanged;
+
+  const ContactListScreen({super.key, this.onThemeModeChanged});
 
   @override
   State<ContactListScreen> createState() => _ContactListScreenState();
@@ -126,7 +128,11 @@ class _ContactListScreenState extends State<ContactListScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => SettingsScreen(
+                      onThemeModeChanged: widget.onThemeModeChanged,
+                    ),
+                  ),
                 ).then((_) => _refreshContacts());
               },
               icon: const Icon(Icons.settings),

@@ -18,6 +18,7 @@ class TransactionChatScreen extends StatefulWidget {
 class _TransactionChatScreenState extends State<TransactionChatScreen> {
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final ScrollController _messagesScrollController = ScrollController();
   TransactionType _selectedType = TransactionType.debt;
   Currency _selectedCurrency = Currency.toman;
   Currency _defaultCurrency = Currency.toman;
@@ -36,7 +37,17 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
     _amountController.removeListener(_updateAmountInWords);
     _amountController.dispose();
     _descriptionController.dispose();
+    _messagesScrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToBottom() {
+    if (!_messagesScrollController.hasClients) return;
+    _messagesScrollController.animateTo(
+      _messagesScrollController.position.minScrollExtent,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+    );
   }
 
   void _updateAmountInWords() {
@@ -146,6 +157,7 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
       setState(() {
         widget.contact.transactions.add(newTransaction!);
       });
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     }
 
     _amountController.clear();
@@ -489,20 +501,33 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
 
   List<dynamic> _getGroupedItems() {
     final List<dynamic> items = [];
-    String? lastDate;
+    String? previousDate;
 
-    // Sorting transactions by date just in case
+    // Newest first for reversed chat list.
     final sortedTransactions = List<FinancialTransaction>.from(widget.contact.transactions)
-      ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+      ..sort((a, b) {
+        final byDate = b.dateTime.compareTo(a.dateTime);
+        if (byDate != 0) return byDate;
+        return b.id.compareTo(a.id);
+      });
 
-    for (var t in sortedTransactions) {
+    for (int i = 0; i < sortedTransactions.length; i++) {
+      final t = sortedTransactions[i];
       final dateStr = _getDateString(t.dateTime);
-      if (dateStr != lastDate) {
-        items.add(dateStr);
-        lastDate = dateStr;
+      if (previousDate == null || previousDate == dateStr) {
+        items.add(t);
+      } else {
+        // Place date separator between day groups in bottom-to-top layout.
+        items.add(previousDate);
+        items.add(t);
       }
-      items.add(t);
+      previousDate = dateStr;
     }
+
+    if (previousDate != null) {
+      items.add(previousDate);
+    }
+
     return items;
   }
 
@@ -572,6 +597,8 @@ class _TransactionChatScreenState extends State<TransactionChatScreen> {
                       ),
                     )
                   : ListView.builder(
+                      controller: _messagesScrollController,
+                      reverse: true,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       itemCount: groupedItems.length,
                       itemBuilder: (context, index) {

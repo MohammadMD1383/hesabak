@@ -4,7 +4,9 @@ import '../services/database_helper.dart';
 import '../widgets/glass_app_bar.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  final Future<void> Function(ThemeMode mode)? onThemeModeChanged;
+
+  const SettingsScreen({super.key, this.onThemeModeChanged});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -12,6 +14,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   Currency _defaultCurrency = Currency.toman;
+  ThemeMode _themeMode = ThemeMode.system;
   bool _isLoading = true;
   bool _isBusy = false;
 
@@ -23,10 +26,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadSettings() async {
     final currency = await DatabaseHelper.instance.getDefaultCurrency();
+    final themeMode = await DatabaseHelper.instance.getThemeMode();
     if (!mounted) return;
 
     setState(() {
       _defaultCurrency = currency;
+      _themeMode = themeMode;
       _isLoading = false;
     });
   }
@@ -37,6 +42,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     setState(() {
       _defaultCurrency = currency;
+    });
+  }
+
+  Future<void> _updateThemeMode(ThemeMode mode) async {
+    await DatabaseHelper.instance.setThemeMode(mode);
+    await widget.onThemeModeChanged?.call(mode);
+    if (!mounted) return;
+    setState(() {
+      _themeMode = mode;
     });
   }
 
@@ -172,6 +186,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ? const Center(child: CircularProgressIndicator())
             : ListView(
                 children: [
+                  const ListTile(
+                    title: Text('تم برنامه'),
+                  ),
+                  RadioListTile<ThemeMode>(
+                    value: ThemeMode.system,
+                    groupValue: _themeMode,
+                    onChanged: (value) {
+                      if (value != null) {
+                        _updateThemeMode(value);
+                      }
+                    },
+                    title: const Text('پیش‌فرض سیستم'),
+                  ),
+                  RadioListTile<ThemeMode>(
+                    value: ThemeMode.light,
+                    groupValue: _themeMode,
+                    onChanged: (value) {
+                      if (value != null) {
+                        _updateThemeMode(value);
+                      }
+                    },
+                    title: const Text('روشن'),
+                  ),
+                  RadioListTile<ThemeMode>(
+                    value: ThemeMode.dark,
+                    groupValue: _themeMode,
+                    onChanged: (value) {
+                      if (value != null) {
+                        _updateThemeMode(value);
+                      }
+                    },
+                    title: const Text('تاریک'),
+                  ),
+                  const Divider(height: 24),
                   const ListTile(
                     title: Text('واحد پول پیش‌فرض'),
                   ),
